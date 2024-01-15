@@ -1,0 +1,91 @@
+
+// YKL Multiple Regression
+// Developer's site: forexroboteasy.com
+// Development: Forex Robot Easy Team
+
+// Import necessary libraries
+#include <Trade\Trade.mqh>
+#include <Regression\Regression.mqh>
+
+// Define input parameters
+input double LotSize = 0.01; // Trading lot size
+input int StopLoss = 100; // Stop loss in pips
+input int TakeProfit = 200; // Take profit in pips
+
+// Initialize trade and regression objects
+CTrade trade;
+CRegression regression;
+
+// Define market variables
+double currentPrice;
+double previousPrice;
+double futurePrice;
+double dependentVariable;
+
+// Initialize market data arrays
+double[] independentVariables1;
+double[] independentVariables2;
+double[] dependentVariables;
+
+// Initialize trade functions
+void OpenPosition(double price, ENUM_ORDER_TYPE type)
+{
+   trade.Buy(LotSize, price, StopLoss, TakeProfit, '', 0, 0, '');
+}
+
+void ClosePosition()
+{
+   trade.PositionClose();
+}
+
+// Initialize regression analysis
+void PerformRegressionAnalysis()
+{
+   // Perform multiple regression analysis on the market data
+   regression.PerformAnalysis(independentVariables1, independentVariables2, dependentVariables);
+
+   // Predict the outcome of the dependent variable based on independent variables
+   futurePrice = regression.Predict(dependentVariable);
+
+   // Print the predicted future price
+   Print('Predicted Future Price: ', futurePrice);
+}
+
+// Initialize market analysis
+void AnalyzeMarket()
+{
+   // Fetch current and previous prices
+   currentPrice = MarketInfo(Symbol(), MODE_BID);
+   previousPrice = MarketInfo(Symbol(), MODE_PREVIOUS);
+
+   // Calculate independent variables based on current and previous prices
+   independentVariables1[0] = currentPrice - previousPrice;
+   independentVariables2[0] = currentPrice + previousPrice;
+
+   // Calculate dependent variable based on current price
+   dependentVariables[0] = currentPrice;
+
+   // Perform regression analysis
+   PerformRegressionAnalysis();
+}
+
+// Start of the program
+void OnTick()
+{
+   // Analyze market behavior
+   AnalyzeMarket();
+
+   // Open or close position based on predicted future price
+   if (futurePrice > currentPrice)
+   {
+      OpenPosition(currentPrice, OP_BUY);
+   }
+   else if (futurePrice < currentPrice)
+   {
+      OpenPosition(currentPrice, OP_SELL);
+   }
+   else
+   {
+      ClosePosition();
+   }
+}
